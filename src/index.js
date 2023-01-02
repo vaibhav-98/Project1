@@ -7,18 +7,16 @@ const app = express()
 
 app.use(express.json())
 
-mongoose.connect("mongodb+srv://vaibhavDatabase:vaibhav@vaibhav.x1p86l4.mongodb.net/mini-blogs-test",{
-      useNewUrlParser:true
+mongoose.connect("mongodb+srv://gabhishek:GAbhishekPassword@gabhishek01.dq23z80.mongodb.net/miniBlogs", {
+      useNewUrlParser: true
 })
-.then( () => console.error("My DB is connected"))
-.catch((err) => console.error(err))
-
-
+      .then(() => console.error("My DB is connected"))
+      .catch((err) => console.error(err))
 
 
 
 //app.use("/", route)
 
-app.listen(3000 , () => {
+app.listen(3000, () => {
       console.error("Express app rinning on port " + 3000);
 })
