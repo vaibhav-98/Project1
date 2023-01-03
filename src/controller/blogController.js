@@ -176,71 +176,72 @@ const deleteBlog = async function (req, res) {
         }
         res.status(200).send();
     }
-    catch(err){
-        res.status(500).send({status:false,msg:err.message})
+    catch (err) {
+        res.status(500).send({ status: false, msg: err.message })
     }
-  }
+}
 
 //========================================Delete Blog By Query Param=========================================
 
-const deleteBlogByQuery=async function(req,res){
-    const {category,authorId,tags,subcategory,isPublished}=req.query;
-    if(category){
-        let deletedData=await blogsModel.updateMany({category:category,isDeleted:false},{isDeleted:true});
-        if(deletedData.modifiedCount!=0){
-            return res.status(200).send({status:true,msg:"deleted successfully"})
+const deleteBlogByQuery = async function (req, res) {
+    try {
+        const { category, authorId, tags, subcategory, isPublished } = req.query;
+        if (category) {
+            let deletedData = await blogsModel.updateMany({ category: category, isDeleted: false }, { isDeleted: true });
+            if (deletedData.modifiedCount != 0) {
+                return res.status(200).send({ status: true, msg: "deleted successfully" })
+            }
         }
+        if (authorId) {
+            if (!ObjectId.isValid(authorId)) {
+                return res.status(400).send({ status: false, msg: "invalid author id" })
+            }
+            let deletedData = await blogsModel.updateMany({ authorId: authorId, isDeleted: false }, { isDeleted: true });
+            if (deletedData.modifiedCount != 0) {
+                return res.status(200).send({ status: true, msg: "deleted successfully" })
+            }
+        }
+        if (tags) {
+            let findedData = await blogsModel.find({ isDeleted: false });
+            let filteredData = findedData.filter((doc) => {
+                let alltag = doc.tags;
+                return alltag.find(tag => tag == tags)
+            })
+            let idArr = [];
+            filteredData.forEach(doc => {
+                idArr.push(doc._id)
+            })
+            let deletedData = await blogsModel.updateMany({ _id: { $in: idArr } }, { isDeleted: true })
+            if (deletedData.modifiedCount != 0) {
+                return res.status(200).send({ status: true, msg: "deleted successfully" })
+            }
+        }
+        if (subcategory) {
+            let findedData = await blogsModel.find({ isDeleted: false });
+            let filteredData = findedData.filter((doc) => {
+                let alltag = doc.subcategory;
+                return alltag.find(subcat => subcat == subcategory)
+            })
+            let idArr = [];
+            filteredData.forEach(doc => {
+                idArr.push(doc._id)
+            })
+            let deletedData = await blogsModel.updateMany({ _id: { $in: idArr } }, { isDeleted: true })
+            if (deletedData.modifiedCount != 0) {
+                return res.status(200).send({ status: true, msg: "deleted successfully" })
+            }
+        }
+        if (isPublished) {
+            let deletedData = await blogsModel.updateMany({ isPublished: isPublished, isDeleted: false }, { isDeleted: true });
+            if (deletedData.modifiedCount != 0) {
+                return res.status(200).send({ status: true, msg: "deleted successfully" })
+            }
+        }
+        return res.status(404).send({ status: false, msg: "no data is found to be deleted" })
     }
-    if(authorId){
-        if(!ObjectId.isValid(authorId)){
-            return res.status(400).send({status:false,msg:"invalid author id"})
-        }
-        let deletedData=await blogsModel.updateMany({authorId:authorId,isDeleted:false},{isDeleted:true});
-        if(deletedData.modifiedCount!=0){
-            return res.status(200).send({status:true,msg:"deleted successfully"})
-        }
+    catch(err){
+        res.status(500).send({status:false,msg:err.message})
     }
-    if(tags){
-        let findedData=await blogsModel.find({isDeleted:false});
-        let filteredData=findedData.filter((doc)=>{
-            let alltag=doc.tags;
-            return alltag.find(tag => tag == tags)
-        })
-        let idArr=[];
-        filteredData.forEach(doc=>{
-            idArr.push(doc._id)
-        })
-        let deletedData=await blogsModel.updateMany({_id:{$in:idArr}},{isDeleted:true})
-        if(deletedData.modifiedCount!=0){
-            return res.status(200).send({status:true,msg:"deleted successfully"})
-        }
-    }
-    if(subcategory){
-        let findedData=await blogsModel.find({isDeleted:false});
-        let filteredData=findedData.filter((doc)=>{
-            let alltag=doc.subcategory;
-            return alltag.find(subcat=>subcat == subcategory)
-        })
-        let idArr=[];
-        filteredData.forEach(doc=>{
-            idArr.push(doc._id)
-        })
-        let deletedData=await blogsModel.updateMany({_id:{$in:idArr}},{isDeleted:true})
-        if(deletedData.modifiedCount!=0){
-            return res.status(200).send({status:true,msg:"deleted successfully"})
-        }
-    }
-    if(isPublished){
-        let deletedData=await blogsModel.updateMany({isPublished:isPublished,isDeleted:false},{isDeleted:true});
-        if(deletedData.modifiedCount!=0){
-            return res.status(200).send({status:true,msg:"deleted successfully"})
-        }
-    }
-
-
-
-
-    return res.status(404).send({status:false,msg:"no data is found to be deleted"})
 }
 
 
