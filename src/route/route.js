@@ -10,6 +10,10 @@ router.post("/authors",authorController.createAuthor)
 
 router.post("/blogs",blogController.createBlog)
 
+//======================================================get API========================
+
+router.get("/blogs", blogController.getBlogsData)
+
 
 
 
