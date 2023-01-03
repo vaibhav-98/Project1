@@ -4,7 +4,7 @@ const authorModel = require("../models/authorModel")
 const createAuthor = async function (req, res) {
     try {
         let data = req.body;
-
+ 
         const { fname, lname, title, email, password } = data;
 
         //body validation
@@ -27,8 +27,8 @@ const createAuthor = async function (req, res) {
         let createdAuthor = await authorModel.create(data)
         res.status(201).send({ msg: createdAuthor })
     }
-    catch(err){
-        res.status(500).send({status:false,msg:err.message})
+    catch (err) {
+        res.status(500).send({ status: false, msg: err.message })
     }
 }
 module.exports.createAuthor = createAuthor;

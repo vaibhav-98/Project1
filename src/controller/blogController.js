@@ -9,7 +9,7 @@ const createBlog = async function (req, res) {
         const { title, body, authorId, tags, category } = req.body;
         if (!title || !body || !authorId || !category) {
             return res.status(400).send({ status: false, msg: "missed some required details" })
-        }
+       }
         if (!ObjectId.isValid(authorId)) {
             return res.status(400).send({ status: false, msg: "invalid author id" })
         }
