@@ -22,7 +22,7 @@ const createBlog = async function (req, res) {
         res.status(201).send({ status: true, msg: savedData })
     }
     catch (err) {
-        res.status(500).send({status:false,msg:err.message})
+        res.status(500).send({ status: false, msg: err.message })
     }
 }
 
@@ -37,28 +37,72 @@ const createBlog = async function (req, res) {
 
 
 
-const getBlogsData = async function (req,res) {
-
+const getBlogsData = async function (req, res) {
     try {
-          
-      let combination = req.query 
-      let {authorId,category, tags,subcategory } = combination
-      let dataBlog = await blogsModel.find({$and: [{isDeleted:false, isPublished:true},combination] }) 
-      if (dataBlog==0) {
-              return res.status(404).send({ status:false, msg :"No Such Blog Found"})
-      } else {
-          return res.status(200).send({ data:dataBlog})
-      }
-      
-    } catch (err) {
-       res.status(500.).send({status:false, msg :err.message })
-      
+        //taking query parameter
+        const qparams = req.query;
+
+        //checking if query parameter is present or not
+        if (Object.keys(qparams).length == 0) {
+            let data = await blogsModel.find({ isDeleted: false, isPublished: true })
+            if (data.length != 0) {
+                return res.status(200).send({ status: true, msg: data })
+            }
+        }
+
+        //destructuring query parameter
+        const { authorId, tags, category, subcategory } = qparams
+
+        //checking authorId was given or not, if given then finding data
+        if (authorId) {
+            let data = await blogsModel.find({ isDeleted: false, isPublished: true, authorId: authorId })
+            if (data.length != 0) {
+                return res.status(200).send({ status: true, msg: data })
+            }
+        }
+
+
+        //checking tags was given or not, if given then finding data
+        if (tags) {
+            let allblogs = await blogsModel.find({ isDeleted: false, isPublished: true })
+            let data = allblogs.filter((blogDoc) => {
+                let alltag = blogDoc.tags;
+                return alltag.find(tag => tag == tags)
+            })
+            if (data.length != 0) {
+                return res.status(200).send({ status: true, msg: data })
+            }
+        }
+
+        //checking category was given or not, if given then finding data
+        if (category) {
+            let data = await blogsModel.find({ isDeleted: false, isPublished: true, category: category })
+            if (data.length != 0) {
+                return res.status(200).send({ status: true, msg: data })
+            }
+        }
+
+
+        //checking subcategory was given or not, if given then finding data
+        if (subcategory) {
+            let allblogs = await blogsModel.find({ isDeleted: false, isPublished: true })
+            let data = allblogs.filter((blogDoc) => {
+                let allSubCategory = blogDoc.subcategory;
+                return allSubCategory.find(subCat => subCat == subcategory)
+            })
+            if (data.length != 0) {
+                return res.status(200).send({ status: true, msg: data })
+            }
+        }
+
+        //if req-res cycle was not terminated it means data not found so giving error response
+        return res.status(404).send({ status: false, msg: "No data found" })
     }
-  
-  
-  
-  }
-  
-  
+    catch(err){
+        res.status(500).send({status:false,msg:"internal server error"})
+    }
+}
+
+
 module.exports.createBlog = createBlog
-module.exports.getBlogsData=getBlogsData
+module.exports.getBlogsData = getBlogsData
