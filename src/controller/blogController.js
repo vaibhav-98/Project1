@@ -104,5 +104,33 @@ const getBlogsData = async function (req, res) {
 }
 
 
+
+
+  //  API ===> Delete blogs by its id  ============================
+
+  const deleteBlog = async function(req,res){
+    const blogId = req.params.blogId
+
+    //  checking format of id
+    if(!ObjectId.isValid(blogId)){
+       return res.status(400).send({status : false, msg : "ObjectId of blog is invalid"})
+    }
+
+    //   checking blog exists or not
+    const findBlogId = await blogsModel.findById(blogId);
+    if(!findBlogId){
+       return res.status(404).send({msg : false, msg : "blog is not exists"})
+    }
+
+    const deleteById = await blogsModel.findOneAndUpdate({$and :[{_id : blogId} , {isDeleted : false}]},{$set : {isDeleted : true}})
+    if(!deleteById){
+        return res.status(404).send({status : false, msg : "document is already deleted"})
+    }   
+    res.status(200).send();
+  }
+  
+
+
 module.exports.createBlog = createBlog
 module.exports.getBlogsData = getBlogsData
+module.exports.deleteBlog=deleteBlog

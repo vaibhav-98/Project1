@@ -15,6 +15,11 @@ router.post("/blogs",blogController.createBlog)
 router.get("/blogs", blogController.getBlogsData)
 
 
+//  API ===>  Delete blog by id
+
+router.delete("/blogs/:blogId",blogController.deleteBlog)
+
+
 
 
 
