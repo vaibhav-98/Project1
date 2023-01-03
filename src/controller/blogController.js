@@ -103,10 +103,57 @@ const getBlogsData = async function (req, res) {
     }
 }
 
+//===========================================================PUT Blogs=========================
+
+
+const updateBlog = async function (req, res)  {
+    try {
+
+        let data = req.body
+        let BlogId = req.params.blogId
+        
+        
+
+        //===================== Destructuring Data from Body =====================//
+        let { title, body, tags, subcategory } = data
+
+        //===================== Cheking Presence of BlogId =====================//
+        if (!BlogId) return res.status(404).send({ status: false, msg: "Please input id BlogId." });
+
+        //===================== Fetching BlogID from DB =====================//
+        let checkBlogID = await blogsModel.findOne({ _id: BlogId })
+        if (!checkBlogID) return res.status(404).send({ status: false, msg: "Please input valid BlogId." })
+
+
+        //===================== Checking Required Field =====================//
+        if (!(title || body || tags || subcategory)) {
+            return res.status(400).send({ status: false, message: "Mandatory fields are required." });
+        }
+
+        //===================== Fetching Data with BlogId and Updating Document =====================//
+
+        let blog = await blogsModel.findOneAndUpdate({ _id: BlogId }, {
+            $push: { subcategory: subcategory, tags: tags },
+            $set: { title: title, body: body, isPublished: true, publishedAt: Date.now() }
+        }, { new: true })
+        
+        if (!blog) return res.status(404).send({ status: false, msg: "Blog not found." })
+        
+        res.status(200).send({ status: true, msg: "Successfully Updated ", data: blog })
+        
+       
+
+    } catch (error) {
+
+        res.status(500).send({ error: error.message })
+    }
+
+} 
 
 
 
-  //  API ===> Delete blogs by its id  ============================
+
+  //  ========================================API ===> Delete blogs by its id  ============================
 
   const deleteBlog = async function(req,res){
     const blogId = req.params.blogId
@@ -133,4 +180,5 @@ const getBlogsData = async function (req, res) {
 
 module.exports.createBlog = createBlog
 module.exports.getBlogsData = getBlogsData
+module.exports.updateBlog=updateBlog
 module.exports.deleteBlog=deleteBlog
