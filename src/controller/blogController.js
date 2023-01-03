@@ -26,4 +26,39 @@ const createBlog = async function (req, res) {
     }
 }
 
+
+
+
+
+
+
+//==========================================================get blogs=================================
+
+
+
+
+const getBlogsData = async function (req,res) {
+
+    try {
+          
+      let combination = req.query 
+      let {authorId,category, tags,subcategory } = combination
+      let dataBlog = await blogsModel.find({$and: [{isDeleted:false, isPublished:true},combination] }) 
+      if (dataBlog==0) {
+              return res.status(404).send({ status:false, msg :"No Such Blog Found"})
+      } else {
+          return res.status(200).send({ data:dataBlog})
+      }
+      
+    } catch (err) {
+       res.status(500.).send({status:false, msg :err.message })
+      
+    }
+  
+  
+  
+  }
+  
+  
 module.exports.createBlog = createBlog
+module.exports.getBlogsData=getBlogsData
