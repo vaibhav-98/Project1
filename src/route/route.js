@@ -2,7 +2,6 @@ const express=require("express");
 const router=express.Router();
 const authorController=require("../controller/authorController")
 const blogController = require("../controller/blogController")
-const toDelete = require("../controller/controller")
 
 //=============================================================create author API=======================
 router.post("/authors",authorController.createAuthor)
@@ -24,9 +23,9 @@ router.put("/blogs/:blogsId", blogController.updateBlog)
 
 router.delete("/blogs/:blogId",blogController.deleteBlog)
 
+//========================================================== Delete blog by query===================================
 
-
-router.put("/blogs", toDelete.deleteBlog)
+router.delete("/blogs",blogController.deleteBlogByQuery)
 
 
 
