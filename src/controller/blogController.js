@@ -22,7 +22,7 @@ const createBlog = async function (req, res) {
         res.status(201).send({ status: true, msg: savedData })
     }
     catch (err) {
-        res.status(500).send({status:false,msg:err.message})
+        res.status(500).send({ status: false, msg: err.message })
     }
 }
 
@@ -37,28 +37,148 @@ const createBlog = async function (req, res) {
 
 
 
-const getBlogsData = async function (req,res) {
-
+const getBlogsData = async function (req, res) {
     try {
-          
-      let combination = req.query 
-      let {authorId,category, tags,subcategory } = combination
-      let dataBlog = await blogsModel.find({$and: [{isDeleted:false, isPublished:true},combination] }) 
-      if (dataBlog==0) {
-              return res.status(404).send({ status:false, msg :"No Such Blog Found"})
-      } else {
-          return res.status(200).send({ data:dataBlog})
-      }
-      
-    } catch (err) {
-       res.status(500.).send({status:false, msg :err.message })
-      
+        //taking query parameter
+        const qparams = req.query;
+
+        //checking if query parameter is present or not
+        if (Object.keys(qparams).length == 0) {
+            let data = await blogsModel.find({ isDeleted: false, isPublished: true })
+            if (data.length != 0) {
+                return res.status(200).send({ status: true, msg: data })
+            }
+        }
+
+        //destructuring query parameter
+        const { authorId, tags, category, subcategory } = qparams
+
+        //checking authorId was given or not, if given then finding data
+        if (authorId) {
+            let data = await blogsModel.find({ isDeleted: false, isPublished: true, authorId: authorId })
+            if (data.length != 0) {
+                return res.status(200).send({ status: true, msg: data })
+            }
+        }
+
+
+        //checking tags was given or not, if given then finding data
+        if (tags) {
+            let allblogs = await blogsModel.find({ isDeleted: false, isPublished: true })
+            let data = allblogs.filter((blogDoc) => {
+                let alltag = blogDoc.tags;
+                return alltag.find(tag => tag == tags)
+            })
+            if (data.length != 0) {
+                return res.status(200).send({ status: true, msg: data })
+            }
+        }
+
+        //checking category was given or not, if given then finding data
+        if (category) {
+            let data = await blogsModel.find({ isDeleted: false, isPublished: true, category: category })
+            if (data.length != 0) {
+                return res.status(200).send({ status: true, msg: data })
+            }
+        }
+
+
+        //checking subcategory was given or not, if given then finding data
+        if (subcategory) {
+            let allblogs = await blogsModel.find({ isDeleted: false, isPublished: true })
+            let data = allblogs.filter((blogDoc) => {
+                let allSubCategory = blogDoc.subcategory;
+                return allSubCategory.find(subCat => subCat == subcategory)
+            })
+            if (data.length != 0) {
+                return res.status(200).send({ status: true, msg: data })
+            }
+        }
+
+        //if req-res cycle was not terminated it means data not found so giving error response
+        return res.status(404).send({ status: false, msg: "No data found" })
     }
-  
-  
-  
+    catch(err){
+        res.status(500).send({status:false,msg:"internal server error"})
+    }
+}
+
+//===========================================================PUT Blogs=========================
+
+
+const updateBlog = async function (req, res)  {
+    try {
+
+        let data = req.body
+        let BlogId = req.params.blogId
+        
+        
+
+        //===================== Destructuring Data from Body =====================//
+        let { title, body, tags, subcategory } = data
+
+        //===================== Cheking Presence of BlogId =====================//
+        if (!BlogId) return res.status(404).send({ status: false, msg: "Please input id BlogId." });
+
+        //===================== Fetching BlogID from DB =====================//
+        let checkBlogID = await blogsModel.findOne({ _id: BlogId })
+        if (!checkBlogID) return res.status(404).send({ status: false, msg: "Please input valid BlogId." })
+
+
+        //===================== Checking Required Field =====================//
+        if (!(title || body || tags || subcategory)) {
+            return res.status(400).send({ status: false, message: "Mandatory fields are required." });
+        }
+
+        //===================== Fetching Data with BlogId and Updating Document =====================//
+
+        let blog = await blogsModel.findOneAndUpdate({ _id: BlogId }, {
+            $push: { subcategory: subcategory, tags: tags },
+            $set: { title: title, body: body, isPublished: true, publishedAt: Date.now() }
+        }, { new: true })
+        
+        if (!blog) return res.status(404).send({ status: false, msg: "Blog not found." })
+        
+        res.status(200).send({ status: true, msg: "Successfully Updated ", data: blog })
+        
+       
+
+    } catch (error) {
+
+        res.status(500).send({ error: error.message })
+    }
+
+} 
+
+
+
+
+  //  ========================================API ===> Delete blogs by its id  ============================
+
+  const deleteBlog = async function(req,res){
+    const blogId = req.params.blogId
+
+    //  checking format of id
+    if(!ObjectId.isValid(blogId)){
+       return res.status(400).send({status : false, msg : "ObjectId of blog is invalid"})
+    }
+
+    //   checking blog exists or not
+    const findBlogId = await blogsModel.findById(blogId);
+    if(!findBlogId){
+       return res.status(404).send({msg : false, msg : "blog is not exists"})
+    }
+
+    const deleteById = await blogsModel.findOneAndUpdate({$and :[{_id : blogId} , {isDeleted : false}]},{$set : {isDeleted : true}})
+    if(!deleteById){
+        return res.status(404).send({status : false, msg : "document is already deleted"})
+    }   
+    res.status(200).send();
   }
   
-  
+
+
 module.exports.createBlog = createBlog
-module.exports.getBlogsData=getBlogsData
+module.exports.getBlogsData = getBlogsData
+module.exports.updateBlog=updateBlog
+module.exports.deleteBlog=deleteBlog
