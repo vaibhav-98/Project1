@@ -44,7 +44,7 @@ const getBlogsData = async function (req, res) {
 
         //checking if query parameter is present or not
         if (Object.keys(qparams).length == 0) {
-            let data = await blogsModel.find({ isDeleted: false, isPublished: true })
+            let data = await blogsModel.find({ isDeleted: false, isPublished: true }).populate("authorId")
             if (data.length != 0) {
                 return res.status(200).send({ status: true, msg: data })
             }
