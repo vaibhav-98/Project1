@@ -110,7 +110,7 @@ const updateBlog = async function (req, res) {
     try {
 
         let data = req.body
-        let BlogId = req.params.blogId
+        let BlogId = req.params.blogsId
 
 
 
@@ -157,7 +157,7 @@ const updateBlog = async function (req, res) {
 
 const deleteBlog = async function (req, res) {
     try {
-        const blogId = req.params.blogId
+        const blogId = req.params.blogsId
 
         //  checking format of id
         if (!ObjectId.isValid(blogId)) {
@@ -174,7 +174,7 @@ const deleteBlog = async function (req, res) {
         if (!deleteById) {
             return res.status(404).send({ status: false, msg: "no data found to be deleted" })
         }
-        res.status(200).send();
+        return res.status(200).send();
     }
     catch (err) {
         res.status(500).send({ status: false, msg: err.message })
@@ -185,9 +185,10 @@ const deleteBlog = async function (req, res) {
 
 const deleteBlogByQuery = async function (req, res) {
     try {
+        let loggedUserId=req.headers["loggedUserId"]
         const { category, authorId, tags, subcategory, isPublished } = req.query;
         if (category) {
-            let deletedData = await blogsModel.updateMany({ category: category, isDeleted: false }, { isDeleted: true });
+            let deletedData = await blogsModel.updateMany({ category: category, isDeleted: false,authorId:loggedUserId }, { isDeleted: true });
             if (deletedData.modifiedCount != 0) {
                 return res.status(200).send({ status: true, msg: "deleted successfully" })
             }
@@ -196,7 +197,7 @@ const deleteBlogByQuery = async function (req, res) {
             if (!ObjectId.isValid(authorId)) {
                 return res.status(400).send({ status: false, msg: "invalid author id" })
             }
-            let deletedData = await blogsModel.updateMany({ authorId: authorId, isDeleted: false }, { isDeleted: true });
+            let deletedData = await blogsModel.updateMany({ authorId: authorId, isDeleted: false, }, { isDeleted: true });
             if (deletedData.modifiedCount != 0) {
                 return res.status(200).send({ status: true, msg: "deleted successfully" })
             }
@@ -211,7 +212,7 @@ const deleteBlogByQuery = async function (req, res) {
             filteredData.forEach(doc => {
                 idArr.push(doc._id)
             })
-            let deletedData = await blogsModel.updateMany({ _id: { $in: idArr } }, { isDeleted: true })
+            let deletedData = await blogsModel.updateMany({ _id: { $in: idArr },authorId:loggedUserId }, { isDeleted: true })
             if (deletedData.modifiedCount != 0) {
                 return res.status(200).send({ status: true, msg: "deleted successfully" })
             }
@@ -226,13 +227,13 @@ const deleteBlogByQuery = async function (req, res) {
             filteredData.forEach(doc => {
                 idArr.push(doc._id)
             })
-            let deletedData = await blogsModel.updateMany({ _id: { $in: idArr } }, { isDeleted: true })
+            let deletedData = await blogsModel.updateMany({ _id: { $in: idArr },authorId:loggedUserId}, { isDeleted: true })
             if (deletedData.modifiedCount != 0) {
                 return res.status(200).send({ status: true, msg: "deleted successfully" })
             }
         }
         if (isPublished) {
-            let deletedData = await blogsModel.updateMany({ isPublished: isPublished, isDeleted: false }, { isDeleted: true });
+            let deletedData = await blogsModel.updateMany({ isPublished: isPublished, isDeleted: false,authorId:loggedUserId}, { isDeleted: true });
             if (deletedData.modifiedCount != 0) {
                 return res.status(200).send({ status: true, msg: "deleted successfully" })
             }

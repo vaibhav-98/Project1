@@ -13,7 +13,8 @@ const blogSchema=new mongoose.Schema({
     },
     authorId: {
         type:ObjectId,
-        ref:"Author"
+        ref:"Author",
+        required:true
     },
     tags:{
         type:[String]
@@ -33,7 +34,7 @@ const blogSchema=new mongoose.Schema({
         default: false
     },
     publishedAt:{
-        type:String
+        type:Date
     },
     isPublished: {
         type:Boolean, 

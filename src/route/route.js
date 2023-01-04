@@ -18,15 +18,15 @@ router.get("/blogs",MW.authentication, blogController.getBlogsData)
 
 //========================================== Update API =========================================
 
-router.put("/blogs/:blogsId",MW.authentication, blogController.updateBlog)
+router.put("/blogs/:blogsId",MW.authentication,MW.authorization, blogController.updateBlog)
 
 //========================================================== Delete blog by id===================================
 
-router.delete("/blogs/:blogId",MW.authentication,blogController.deleteBlog)
+router.delete("/blogs/:blogsId",MW.authentication,MW.authorization,blogController.deleteBlog)
 
 //========================================================== Delete blog by query===================================
 
-router.delete("/blogs",MW.authentication,blogController.deleteBlogByQuery)
+router.delete("/blogs",MW.authentication,MW.authorization,blogController.deleteBlogByQuery)
 
 
 //==========================================================login===================================================
