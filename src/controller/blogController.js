@@ -3,10 +3,10 @@ const authorModel = require("../models/authorModel")
 const blogsModel = require("../models/blogsModel")
 const ObjectId = mongoose.Types.ObjectId
 
-
+//=============================================================create Blog API=============================
 const createBlog = async function (req, res) {
     try {
-        const { title, body, authorId, category } = req.body;
+        const { title, body, authorId, category, isPublished } = req.body;
         if (!title || !body || !authorId || !category) {
             return res.status(400).send({ status: false, msg: "missed some required details" })
         }
@@ -17,6 +17,9 @@ const createBlog = async function (req, res) {
         let checkAuthor = await authorModel.findById(authorId)
         if (!checkAuthor) {
             return res.status(400).send({ status: false, msg: "author doesn't exists" })
+        }
+        if(isPublished){
+            req.body["publishedAt"]= Date.now()
         }
         const savedData = await blogsModel.create(req.body)
         res.status(201).send({ status: true, msg: savedData })
@@ -174,7 +177,7 @@ const deleteBlog = async function (req, res) {
             return res.status(404).send({ msg: false, msg: "blog is not exists" })
         }
 
-        const deleteById = await blogsModel.findOneAndUpdate({ $and: [{ _id: blogId }, { isDeleted: false }] }, { $set: { isDeleted: true } })
+        const deleteById = await blogsModel.findOneAndUpdate({ $and: [{ _id: blogId }, { isDeleted: false }] }, { $set: { isDeleted: true,deletedAt :Date.now() } })
         if (!deleteById) {
             return res.status(404).send({ status: false, msg: "no data found to be deleted" })
         }
@@ -192,7 +195,7 @@ const deleteBlogByQuery = async function (req, res) {
         let loggedUserId=req.headers["loggedUserId"]
         const { category, authorId, tags, subcategory, isPublished } = req.query;
         if (category) {
-            let deletedData = await blogsModel.updateMany({ category: category, isDeleted: false,authorId:loggedUserId }, { isDeleted: true });
+            let deletedData = await blogsModel.updateMany({ category: category, isDeleted: false,authorId:loggedUserId }, { isDeleted: true, deletedAt :Date.now() });
             if (deletedData.modifiedCount != 0) {
                 return res.status(200).send({ status: true, msg: "deleted successfully" })
             }
@@ -201,7 +204,7 @@ const deleteBlogByQuery = async function (req, res) {
             if (!ObjectId.isValid(authorId)) {
                 return res.status(400).send({ status: false, msg: "invalid author id" })
             }
-            let deletedData = await blogsModel.updateMany({ authorId: authorId, isDeleted: false, }, { isDeleted: true });
+            let deletedData = await blogsModel.updateMany({ authorId: authorId, isDeleted: false, }, { isDeleted: true,deletedAt :Date.now() });
             if (deletedData.modifiedCount != 0) {
                 return res.status(200).send({ status: true, msg: "deleted successfully" })
             }
@@ -216,7 +219,7 @@ const deleteBlogByQuery = async function (req, res) {
             filteredData.forEach(doc => {
                 idArr.push(doc._id)
             })
-            let deletedData = await blogsModel.updateMany({ _id: { $in: idArr },authorId:loggedUserId }, { isDeleted: true })
+            let deletedData = await blogsModel.updateMany({ _id: { $in: idArr },authorId:loggedUserId }, { isDeleted: true,deletedAt :Date.now() })
             if (deletedData.modifiedCount != 0) {
                 return res.status(200).send({ status: true, msg: "deleted successfully" })
             }
@@ -231,13 +234,13 @@ const deleteBlogByQuery = async function (req, res) {
             filteredData.forEach(doc => {
                 idArr.push(doc._id)
             })
-            let deletedData = await blogsModel.updateMany({ _id: { $in: idArr },authorId:loggedUserId}, { isDeleted: true })
+            let deletedData = await blogsModel.updateMany({ _id: { $in: idArr },authorId:loggedUserId}, { isDeleted: true ,deletedAt :Date.now()})
             if (deletedData.modifiedCount != 0) {
                 return res.status(200).send({ status: true, msg: "deleted successfully" })
             }
         }
         if (isPublished) {
-            let deletedData = await blogsModel.updateMany({ isPublished: isPublished, isDeleted: false,authorId:loggedUserId}, { isDeleted: true });
+            let deletedData = await blogsModel.updateMany({ isPublished: isPublished, isDeleted: false,authorId:loggedUserId}, { isDeleted: true,deletedAt :Date.now() });
             if (deletedData.modifiedCount != 0) {
                 return res.status(200).send({ status: true, msg: "deleted successfully" })
             }
