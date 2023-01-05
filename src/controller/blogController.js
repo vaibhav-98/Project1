@@ -55,6 +55,10 @@ const getBlogsData = async function (req, res) {
 
         //checking authorId was given or not, if given then finding data
         if (authorId) {
+            if(!ObjectId.isValid(authorId)){
+                return res.status(400).send({status:false, Error:"Invalid author Id format"})
+
+            }
             let data = await blogsModel.find({ isDeleted: false, isPublished: true, authorId: authorId }).populate("authorId",{fname:1,lname:1,title:1,_id:0})
             if (data.length != 0) {
                 return res.status(200).send({ status: true, msg: data })
