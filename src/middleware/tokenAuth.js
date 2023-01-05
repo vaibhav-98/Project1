@@ -1,5 +1,7 @@
+const mongoose = require("mongoose")
 const jwt = require("jsonwebtoken");
 const blogsModel = require("../models/blogsModel");
+const ObjectId = mongoose.Types.ObjectId
 
 const authentication = function (req, res, next) {
     try {
@@ -9,7 +11,7 @@ const authentication = function (req, res, next) {
         }
         try {
             let decodedToken = jwt.verify(token, "vagaProject1")
-            req.headers["loggedUserId"]=decodedToken.user
+            req.headers["loggedUserId"] = decodedToken.user
             next();
         }
         catch (err) {
@@ -21,23 +23,35 @@ const authentication = function (req, res, next) {
     }
 }
 
-const authorization=async function(req,res,next){
-    loggedUserId=req.headers["loggedUserId"]
-    if(Object.keys(req.params).length!=0){
-        let blogsData=await blogsModel.findOne({_id:req.params.blogsId})
-        let authorId=blogsData.authorId
-        if(authorId!=loggedUserId){
-            return res.status(403).send({status:false,msg:"you are not authorized"})
+const authorization = async function (req, res, next) {
+    try {
+        loggedUserId = req.headers["loggedUserId"]
+        if (Object.keys(req.params).length != 0) {
+            let blogId = req.params.blogsId;
+            if (!ObjectId.isValid(blogId)) {
+                return res.status(400).send({ status: false, msg: "invalid blogId format" })
+            }
+            let blogsData = await blogsModel.findOne({ _id: blogId })
+            if (!blogsData) {
+                return res.status(404).send({ status: false, msg: "no data found" })
+            }
+            let authorId = blogsData.authorId
+            if (authorId != loggedUserId) {
+                return res.status(403).send({ status: false, msg: "you are not authorized" })
+            }
         }
-    }
-    if(req.query.authorId){
-        if(req.query.authorId!=loggedUserId){
-            return res.status(403).send({status:false,msg:req.query.authorId})
+        if (req.query.authorId) {
+            if (req.query.authorId != loggedUserId) {
+                return res.status(403).send({ status: false, msg: "you are not authorized" })
+            }
         }
+        next();
     }
-    next();
+    catch(err){
+        return res.status(500).send({status:false,msg:err.message})
+    }
 }
-    
+
 
 
 

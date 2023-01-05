@@ -6,7 +6,7 @@ const ObjectId = mongoose.Types.ObjectId
 
 const createBlog = async function (req, res) {
     try {
-        const { title, body, authorId, tags, category } = req.body;
+        const { title, body, authorId, category } = req.body;
         if (!title || !body || !authorId || !category) {
             return res.status(400).send({ status: false, msg: "missed some required details" })
         }
@@ -44,7 +44,7 @@ const getBlogsData = async function (req, res) {
 
         //checking if query parameter is present or not
         if (Object.keys(qparams).length == 0) {
-            let data = await blogsModel.find({ isDeleted: false, isPublished: true }).populate("authorId")
+            let data = await blogsModel.find({ isDeleted: false, isPublished:true }).populate("authorId",{fname:1,lname:1,title:1,_id:0})
             if (data.length != 0) {
                 return res.status(200).send({ status: true, msg: data })
             }
@@ -55,7 +55,7 @@ const getBlogsData = async function (req, res) {
 
         //checking authorId was given or not, if given then finding data
         if (authorId) {
-            let data = await blogsModel.find({ isDeleted: false, isPublished: true, authorId: authorId })
+            let data = await blogsModel.find({ isDeleted: false, isPublished: true, authorId: authorId }).populate("authorId",{fname:1,lname:1,title:1,_id:0})
             if (data.length != 0) {
                 return res.status(200).send({ status: true, msg: data })
             }
@@ -64,7 +64,7 @@ const getBlogsData = async function (req, res) {
 
         //checking tags was given or not, if given then finding data
         if (tags) {
-            let allblogs = await blogsModel.find({ isDeleted: false, isPublished: true })
+            let allblogs = await blogsModel.find({ isDeleted: false, isPublished: true }).populate("authorId",{fname:1,lname:1,title:1,_id:0})
             let data = allblogs.filter((blogDoc) => {
                 let alltag = blogDoc.tags;
                 return alltag.find(tag => tag == tags)
@@ -76,7 +76,7 @@ const getBlogsData = async function (req, res) {
 
         //checking category was given or not, if given then finding data
         if (category) {
-            let data = await blogsModel.find({ isDeleted: false, isPublished: true, category: category })
+            let data = await blogsModel.find({ isDeleted: false, isPublished: true, category: category }).populate("authorId",{fname:1,lname:1,title:1,_id:0})
             if (data.length != 0) {
                 return res.status(200).send({ status: true, msg: data })
             }
@@ -85,7 +85,7 @@ const getBlogsData = async function (req, res) {
 
         //checking subcategory was given or not, if given then finding data
         if (subcategory) {
-            let allblogs = await blogsModel.find({ isDeleted: false, isPublished: true })
+            let allblogs = await blogsModel.find({ isDeleted: false, isPublished: true }).populate("authorId",{fname:1,lname:1,title:1,_id:0})
             let data = allblogs.filter((blogDoc) => {
                 let allSubCategory = blogDoc.subcategory;
                 return allSubCategory.find(subCat => subCat == subcategory)
