@@ -9,14 +9,15 @@ const authentication = function (req, res, next) {
         if (!token) {
             return res.status(400).send({ status: false, Error: "authentication error" })
         }
-        try {
-            let decodedToken = jwt.verify(token, "vagaProject1")
-            req.headers["loggedUserId"] = decodedToken.user
-            next();
-        }
-        catch (err) {
-            return res.status(400).send({ status: false, msg: "invalid token" })
-        }
+        jwt.verify(token, "vagaProject1",(err,decodedToken)=>{
+            if(err){
+                return res.status(400).send({status:false,msg:"authentication failed - invalid token"})
+            }
+            else{
+                req.headers["loggedUserId"] = decodedToken.user
+                next();
+            }
+        })
     }
     catch (err) {
         return res.status(500).send({ status: false, msg: err.message })

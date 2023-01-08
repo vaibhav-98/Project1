@@ -11,7 +11,10 @@ function checkPassword(str) {
 
 function validateName(name) {
     var regex = /^[a-zA-Z ]{2,30}$/;
-    return regex.test(name);
+    let nameArr=name.split(" ")
+    let name2=nameArr.join("");
+    let hasSpace=(name2.length==name.length)
+    return (regex.test(name) && hasSpace);
 }
 
 module.exports.isValidEmail = isValidEmail;

@@ -14,12 +14,16 @@ const createBlog = async function (req, res) {
             return res.status(400).send({ status: false, msg: "invalid author id" })
         }
 
+        if(req.headers.loggedUserId != authorId){
+            return res.status(400).send({status:false,msg:"please provide your own author id not any another"})
+        }
+
         let checkAuthor = await authorModel.findById(authorId)
         if (!checkAuthor) {
             return res.status(400).send({ status: false, msg: "author doesn't exists" })
         }
-        if(isPublished){
-            req.body["publishedAt"]= Date.now()
+        if (isPublished) {
+            req.body["publishedAt"] = Date.now()
         }
         const savedData = await blogsModel.create(req.body)
         res.status(201).send({ status: true, msg: savedData })
@@ -47,63 +51,19 @@ const getBlogsData = async function (req, res) {
 
         //checking if query parameter is present or not
         if (Object.keys(qparams).length == 0) {
-            let data = await blogsModel.find({ isDeleted: false, isPublished:true }).populate("authorId",{fname:1,lname:1,title:1,_id:0})
-            if (data.length != 0) {
+            let data = await blogsModel.find({ isDeleted: false, isPublished: true }).populate("authorId", { fname: 1, lname: 1, title: 1, _id: 0 })
+            if (data.length == 0) {
                 return res.status(200).send({ status: true, msg: data })
             }
         }
-
-        //destructuring query parameter
-        const { authorId, tags, category, subcategory } = qparams
-
-        //checking authorId was given or not, if given then finding data
-        if (authorId) {
-            if(!ObjectId.isValid(authorId)){
-                return res.status(400).send({status:false, Error:"Invalid author Id format"})
-
-            }
-            let data = await blogsModel.find({ isDeleted: false, isPublished: true, authorId: authorId }).populate("authorId",{fname:1,lname:1,title:1,_id:0})
-            if (data.length != 0) {
-                return res.status(200).send({ status: true, msg: data })
-            }
+        
+        qparams.isDeleted=false
+        qparams.isPublished=true
+        let data = await blogsModel.find(qparams).populate("authorId", { fname: 1, lname: 1, title: 1, _id: 0 })
+        if(data.length!=0){
+            return res.status(200).send({status:true,msg:data})
         }
-
-
-        //checking tags was given or not, if given then finding data
-        if (tags) {
-            let allblogs = await blogsModel.find({ isDeleted: false, isPublished: true }).populate("authorId",{fname:1,lname:1,title:1,_id:0})
-            let data = allblogs.filter((blogDoc) => {
-                let alltag = blogDoc.tags;
-                return alltag.find(tag => tag == tags)
-            })
-            if (data.length != 0) {
-                return res.status(200).send({ status: true, msg: data })
-            }
-        }
-
-        //checking category was given or not, if given then finding data
-        if (category) {
-            let data = await blogsModel.find({ isDeleted: false, isPublished: true, category: category }).populate("authorId",{fname:1,lname:1,title:1,_id:0})
-            if (data.length != 0) {
-                return res.status(200).send({ status: true, msg: data })
-            }
-        }
-
-
-        //checking subcategory was given or not, if given then finding data
-        if (subcategory) {
-            let allblogs = await blogsModel.find({ isDeleted: false, isPublished: true }).populate("authorId",{fname:1,lname:1,title:1,_id:0})
-            let data = allblogs.filter((blogDoc) => {
-                let allSubCategory = blogDoc.subcategory;
-                return allSubCategory.find(subCat => subCat == subcategory)
-            })
-            if (data.length != 0) {
-                return res.status(200).send({ status: true, msg: data })
-            }
-        }
-
-        //if req-res cycle was not terminated it means data not found so giving error response
-        return res.status(404).send({ status: false, msg: "No data found" })
+        return res.status(404).send({status:false,msg:"no data found"})
     }
     catch (err) {
         res.status(500).send({ status: false, msg: "internal server error" })
@@ -177,7 +137,7 @@ const deleteBlog = async function (req, res) {
             return res.status(404).send({ msg: false, msg: "blog is not exists" })
         }
 
-        const deleteById = await blogsModel.findOneAndUpdate({ $and: [{ _id: blogId }, { isDeleted: false }] }, { $set: { isDeleted: true,deletedAt :Date.now() } })
+        const deleteById = await blogsModel.findOneAndUpdate({ $and: [{ _id: blogId }, { isDeleted: false }] }, { $set: { isDeleted: true, deletedAt: Date.now() } })
         if (!deleteById) {
             return res.status(404).send({ status: false, msg: "no data found to be deleted" })
         }
@@ -192,63 +152,29 @@ const deleteBlog = async function (req, res) {
 
 const deleteBlogByQuery = async function (req, res) {
     try {
-        let loggedUserId=req.headers["loggedUserId"]
-        const { category, authorId, tags, subcategory, isPublished } = req.query;
-        if (category) {
-            let deletedData = await blogsModel.updateMany({ category: category, isDeleted: false,authorId:loggedUserId }, { isDeleted: true, deletedAt :Date.now() });
-            if (deletedData.modifiedCount != 0) {
-                return res.status(200).send({ status: true, msg: "deleted successfully" })
-            }
+        let loggedUserId = req.headers["loggedUserId"]
+        let qparams=req.query;
+        if(Object.keys(qparams).length==0){
+            return res.status(400).send({status:false,msg:"please provide some query data"})
         }
-        if (authorId) {
-            if (!ObjectId.isValid(authorId)) {
-                return res.status(400).send({ status: false, msg: "invalid author id" })
-            }
-            let deletedData = await blogsModel.updateMany({ authorId: authorId, isDeleted: false, }, { isDeleted: true,deletedAt :Date.now() });
-            if (deletedData.modifiedCount != 0) {
-                return res.status(200).send({ status: true, msg: "deleted successfully" })
-            }
+        const {category, authorId, tags, subcategory,isPublished}=req.query;
+        if(!(category || authorId || tags || subcategory || isPublished)){
+            return res.status(400).send({status:false,msg:"please provide some necessary query data"})
         }
-        if (tags) {
-            let findedData = await blogsModel.find({ isDeleted: false });
-            let filteredData = findedData.filter((doc) => {
-                let alltag = doc.tags;
-                return alltag.find(tag => tag == tags)
-            })
-            let idArr = [];
-            filteredData.forEach(doc => {
-                idArr.push(doc._id)
-            })
-            let deletedData = await blogsModel.updateMany({ _id: { $in: idArr },authorId:loggedUserId }, { isDeleted: true,deletedAt :Date.now() })
-            if (deletedData.modifiedCount != 0) {
-                return res.status(200).send({ status: true, msg: "deleted successfully" })
-            }
+        if(!qparams.authorId){
+            qparams.authorId=loggedUserId
         }
-        if (subcategory) {
-            let findedData = await blogsModel.find({ isDeleted: false });
-            let filteredData = findedData.filter((doc) => {
-                let alltag = doc.subcategory;
-                return alltag.find(subcat => subcat == subcategory)
-            })
-            let idArr = [];
-            filteredData.forEach(doc => {
-                idArr.push(doc._id)
-            })
-            let deletedData = await blogsModel.updateMany({ _id: { $in: idArr },authorId:loggedUserId}, { isDeleted: true ,deletedAt :Date.now()})
-            if (deletedData.modifiedCount != 0) {
-                return res.status(200).send({ status: true, msg: "deleted successfully" })
-            }
+        qparams.isDeleted=false;
+        let deletedData=await blogsModel.updateMany(qparams,{isDeleted:true})
+        let deletedCount=deletedData.modifiedCount;
+        if(deletedCount != 0){
+            return res.status(200).send({status:true,msg:`deleted ${deletedCount} blog`})
         }
-        if (isPublished) {
-            let deletedData = await blogsModel.updateMany({ isPublished: isPublished, isDeleted: false,authorId:loggedUserId}, { isDeleted: true,deletedAt :Date.now() });
-            if (deletedData.modifiedCount != 0) {
-                return res.status(200).send({ status: true, msg: "deleted successfully" })
-            }
-        }
+        
         return res.status(404).send({ status: false, msg: "no data is found to be deleted" })
     }
-    catch(err){
-        res.status(500).send({status:false,msg:err.message})
+    catch (err) {
+        res.status(500).send({ status: false, msg: err.message })
     }
 }
 

@@ -22,7 +22,7 @@ const createAuthor = async function (req, res) {
 
         // email syntax validation
         if(!validation.isValidEmail(email)){
-            res.status(400).send({status:false,Error:"INVALID EMAIL - Email should be in this format (abc@egf.com)"})
+            return res.status(400).send({status:false,Error:"INVALID EMAIL - Email should be in this format (abc@egf.com)"})
         }
 
         //email validation
@@ -33,7 +33,7 @@ const createAuthor = async function (req, res) {
 
         //name validation
         if(!validation.validateName(fname) || !validation.validateName(lname)){
-            return res.status(400).send({ status: false, Error: "INVALID Name - First name and last name should contain alphabets only. "})
+            return res.status(400).send({ status: false, Error: "INVALID Name - First name and last name should contain alphabets only and no space. "})
         }
 
         //password validation
@@ -41,6 +41,8 @@ const createAuthor = async function (req, res) {
             return res.status(400).send({ status: false, Error: "Required minimum 8 characters with combination of at least one special character(@,$,&,/,*), upper and lower case letters and a number" })
         }
 
+        // making email to lowercase
+        data.email=email.toLowerCase()
 
         let createdAuthor = await authorModel.create(data)
         res.status(201).send({ status: true, msg: createdAuthor })
@@ -57,7 +59,11 @@ const authLogin = async function (req, res) {
         if (!email || !password) {
             return res.status(400).send({ status: false, Error: "Email and Password are required" })
         }
-        let user = await authorModel.findOne({ email: email, password: password })
+
+        //making email to lower case
+        const updatedEmail=email.toLowerCase()
+
+        let user = await authorModel.findOne({ email: updatedEmail, password: password })
         if (!user) {
             return res.status(400).send({ status: false, Error: "Email or password is incorrect" })
         }

@@ -7,6 +7,10 @@ const MW=require("../middleware/tokenAuth")
 //=============================================================create author API=======================
 router.post("/authors",authorController.createAuthor)
 
+//==========================================================login===================================================
+
+router.post("/login",authorController.authLogin)
+
 //============================================================== CREATING BLOGS API====================================
 
 router.post("/blogs",MW.authentication,blogController.createBlog)
@@ -27,15 +31,6 @@ router.delete("/blogs/:blogsId",MW.authentication,MW.authorization,blogControlle
 //========================================================== Delete blog by query===================================
 
 router.delete("/blogs",MW.authentication,MW.authorization,blogController.deleteBlogByQuery)
-
-
-//==========================================================login===================================================
-
-router.post("/login",authorController.authLogin)
-
-
-
-  
 
 
 
