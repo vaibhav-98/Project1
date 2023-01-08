@@ -52,7 +52,7 @@ const getBlogsData = async function (req, res) {
         //checking if query parameter is present or not
         if (Object.keys(qparams).length == 0) {
             let data = await blogsModel.find({ isDeleted: false, isPublished: true }).populate("authorId", { fname: 1, lname: 1, title: 1, _id: 0 })
-            if (data.length == 0) {
+            if (data.length != 0) {
                 return res.status(200).send({ status: true, msg: data })
             }
         }
@@ -99,7 +99,7 @@ const updateBlog = async function (req, res) {
 
         //===================== Fetching Data with BlogId and Updating Document =====================//
 
-        let blog = await blogsModel.findOneAndUpdate({ _id: BlogId }, {
+        let blog = await blogsModel.findOneAndUpdate({ _id: BlogId,isDeleted:false }, {
             $push: { subcategory: subcategory, tags: tags },
             $set: { title: title, body: body, isPublished: true, publishedAt: Date.now() }
         }, { new: true })
@@ -134,7 +134,7 @@ const deleteBlog = async function (req, res) {
         //   checking blog exists or not
         const findBlogId = await blogsModel.findById(blogId);
         if (!findBlogId) {
-            return res.status(404).send({ msg: false, msg: "blog is not exists" })
+            return res.status(404).send({ status: false, msg: "blog is not exists" })
         }
 
         const deleteById = await blogsModel.findOneAndUpdate({ $and: [{ _id: blogId }, { isDeleted: false }] }, { $set: { isDeleted: true, deletedAt: Date.now() } })
