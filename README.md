@@ -1,7 +1,7 @@
 # Project1
-# Californium
 
-Repository for backend cohort - Californium
+
+Repository for backend cohort - Californiu
 
 ## Blogging Site Mini Project Requirement
 
